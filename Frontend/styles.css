@@ -1,0 +1,151 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f4f4;
+}
+
+#auth-section {
+  padding: 40px;
+  text-align: center;
+}
+
+#auth-form {
+  display: inline-block;
+  margin-top: 20px;
+}
+
+#auth-form input,
+#auth-form select,
+#auth-form button {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#dashboard-section {
+  display: flex;
+  height: 100vh;
+}
+
+#sidebar {
+  display: none; /* Hide by default */
+  width: 250px;
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+}
+
+
+#sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+#sidebar li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #444;
+}
+
+#sidebar li:hover {
+  background-color: #555;
+}
+
+#main-panel {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.book-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.book-card {
+  background-color: white;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 220px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.book-card:hover {
+  transform: scale(1.02);
+}
+
+.book-card h3 {
+  font-size: 18px;
+  margin: 10px 0 5px;
+}
+
+.book-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.book-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.book-card button {
+  margin: 5px 5px 0 0;
+  font-size: 12px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #ffc107;
+  color: black;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.borrow-btn, .return-btn, .rate-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+#member-ui, #librarian-ui {
+  margin-bottom: 20px;
+}
+
+#search-input, #librarian-search {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.hidden {
+  display: none;
+}
