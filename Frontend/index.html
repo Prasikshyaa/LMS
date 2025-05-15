@@ -1,43 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Library Management System</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div id="auth-section">
-    <h1>📚 Welcome to the Digital Library</h1>
-    <form id="auth-form">
-      <input type="text" id="auth-username" placeholder="Username" required />
-      <input type="password" id="auth-password" placeholder="Password" required />
-      <select id="auth-role">
-        <option value="member">Member</option>
-        <option value="librarian">Librarian</option>
-      </select>
-      <button type="submit" id="login-btn">Login</button>
-      <button type="button" id="register-btn">Register</button>
-    </form>
-  </div>
-
-  <div id="dashboard-section" class="hidden">
-    <aside id="sidebar">
-      <ul id="menu-items"></ul>
-    </aside>
-    <main id="main-panel">
-      <h2 id="dashboard-title"></h2>
-      <div id="member-ui" class="hidden">
-        <h3>What do you want to read today?</h3>
-        <input type="text" id="search-input" placeholder="Search books by title..." />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom styles -->
+    <style>
+      .book-card {
+        transition: transform 0.3s;
+        height: 100%;
+      }
+      .book-card:hover {
+        transform: translateY(-5px);
+      }
+      .sidebar-item {
+        cursor: pointer;
+      }
+      .sidebar-item:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+      .book-cover {
+        height: 200px;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <!-- Authentication Section -->
+    <div id="auth-section" class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow">
+            <div class="card-body p-5">
+              <h1 class="text-center mb-4">
+                📚 Welcome to the Digital Library
+              </h1>
+              <form id="auth-form">
+                <div class="mb-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="auth-username"
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="auth-password"
+                    placeholder="Password"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <select class="form-select" id="auth-role">
+                    <option value="member">Member</option>
+                    <option value="librarian">Librarian</option>
+                  </select>
+                </div>
+                <div class="d-grid gap-2">
+                  <button type="submit" id="login-btn" class="btn btn-primary">
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    id="register-btn"
+                    class="btn btn-outline-secondary"
+                  >
+                    Register
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="librarian-ui" class="hidden">
-        <input type="text" id="librarian-search" placeholder="Search books to edit..." />
-      </div>
-      <div id="dashboard-content" class="book-list"></div>
-    </main>
-  </div>
+    </div>
 
-  <script src="script.js"></script>
-</body>
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="d-none">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- Sidebar -->
+          <div
+            class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse"
+            id="sidebar"
+          >
+            <div class="position-sticky pt-3">
+              <h5 class="sidebar-heading px-3 mt-4 mb-1 text-muted">Menu</h5>
+              <ul class="nav flex-column" id="menu-items">
+                <!-- Menu items will be dynamically added here -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div
+              class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+            >
+              <h2 id="dashboard-title">Dashboard</h2>
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary d-md-none"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#sidebar"
+                >
+                  <span data-feather="menu"></span>
+                  Menu
+                </button>
+              </div>
+            </div>
+
+            <!-- Member Search UI -->
+            <div id="member-ui" class="d-none mb-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title">What do you want to read today?</h5>
+                  <div class="input-group">
+                    <span class="input-group-text"
+                      ><i class="bi bi-search"></i
+                    ></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="search-input"
+                      placeholder="Search books by title..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Librarian Search UI -->
+            <div id="librarian-ui" class="d-none mb-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="input-group">
+                    <span class="input-group-text"
+                      ><i class="bi bi-search"></i
+                    ></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="librarian-search"
+                      placeholder="Search books to edit..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div
+              id="dashboard-content"
+              class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4"
+            >
+              <!-- Book cards will be dynamically added here -->
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>

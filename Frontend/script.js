@@ -1,337 +1,308 @@
-let currentUser = null;
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let books = JSON.parse(localStorage.getItem("books")) || [];
+document.addEventListener("DOMContentLoaded", function () {
+  const authForm = document.getElementById("auth-form");
+  const registerBtn = document.getElementById("register-btn");
 
-function saveBooks() {
-  localStorage.setItem("books", JSON.stringify(books));
-}
-function saveUsers() {
-  localStorage.setItem("users", JSON.stringify(users));
-}
+  const authSection = document.getElementById("auth-section");
+  const dashboardSection = document.getElementById("dashboard-section");
 
-function renderSidebar() {
-  const sidebar = document.getElementById("menu-items");
-  sidebar.innerHTML = "";
+  const memberUI = document.getElementById("member-ui");
+  const librarianUI = document.getElementById("librarian-ui");
+  const dashboardTitle = document.getElementById("dashboard-title");
 
-  if (!currentUser) return;
+  const menuItems = document.getElementById("menu-items");
+  const dashboardContent = document.getElementById("dashboard-content");
 
-  const isLibrarian = currentUser.role === "librarian";
-  const menu = isLibrarian
-    ? [
-        "Add Book",
-        "View All Books",
-        "View Available Books",
-        "Search by Title",
-        "See Due Dates",
-        "Show Late Fees",
-        "Logout",
-      ]
-    : [
-        "View All Books",
-        "Borrow Books",
-        "Return Books",
-        "My Borrowed Books",
-        "Search by Title",
-        "Late Fees & Pay",
-        "Logout",
-      ];
+  let currentRole = null;
 
-  menu.forEach((item) => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    li.onclick = () => handleMenuClick(item);
-    sidebar.appendChild(li);
+  const books = [
+    {
+      title: "The Great Gatsby",
+      imageUrl: "https://via.placeholder.com/150x200?text=Gatsby",
+      available: true,
+      dueDate: null,
+    },
+    {
+      title: "1984",
+      imageUrl: "https://via.placeholder.com/150x200?text=1984",
+      available: false,
+      dueDate: "2025-05-12",
+    },
+    {
+      title: "Harry Potter",
+      imageUrl: "https://via.placeholder.com/150x200?text=Harry+Potter",
+      available: true,
+      dueDate: null,
+    },
+  ];
+
+  authForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const role = document.getElementById("auth-role").value;
+    currentRole = role;
+    showDashboard(role);
   });
-}
 
-function handleMenuClick(item) {
-  const content = document.getElementById("dashboard-content");
-  const title = document.getElementById("dashboard-title");
-  document.getElementById("member-ui").classList.add("hidden");
-  document.getElementById("librarian-ui").classList.add("hidden");
+  registerBtn.addEventListener("click", function () {
+    alert("Registration not implemented.");
+  });
 
-  if (item === "Logout") return logout();
+  function showDashboard(role) {
+    authSection.classList.add("d-none");
+    dashboardSection.classList.remove("d-none");
 
-  if (item === "Add Book") return showAddBookForm();
-  if (item === "Edit Books") return showEditBooks();
-  if (item === "Remove Books") return showRemoveBooks();
-  if (item === "View All Books") return renderBooks(books);
-  if (item === "View Available Books")
-    return renderBooks(books.filter((b) => !b.borrowedBy));
-  if (item === "Search by Title") {
-    if (currentUser.role === "member")
-      document.getElementById("member-ui").classList.remove("hidden");
-    else document.getElementById("librarian-ui").classList.remove("hidden");
-    return;
+    memberUI.classList.add("d-none");
+    librarianUI.classList.add("d-none");
+
+    menuItems.innerHTML = "";
+    dashboardContent.innerHTML = "";
+
+    if (role === "librarian") {
+      dashboardTitle.textContent = "Librarian Dashboard";
+      librarianUI.classList.remove("d-none");
+
+      addMenu("Add Book", addBookUI);
+      addMenu("View All Books", () => showBooks(books));
+      addMenu("View Available Books", () =>
+        showBooks(books.filter((b) => b.available))
+      );
+      addMenu("Search by Title", searchBookUI);
+      addMenu("See Due Dates", showDueDates);
+      addMenu("Show Late Fees", showLateFees);
+      addMenu("Logout", logout);
+    } else {
+      dashboardTitle.textContent = "Member Dashboard";
+      memberUI.classList.remove("d-none");
+
+      addMenu("View All Books", () => showBooks(books));
+      addMenu("Borrow Books", borrowBookUI);
+      addMenu("Return Books", returnBookUI);
+      addMenu("My Borrowed Books", showBorrowedBooks);
+      addMenu("Search by Title", searchBookUI);
+      addMenu("Late Fees & Pay", showLateFees);
+      addMenu("Logout", logout);
+    }
   }
-  if (item === "See Due Dates") return showDueDates();
-  if (item === "Show Late Fees") return showLateFees();
 
-  if (item === "Borrow Books")
-    return renderBooks(books.filter((b) => !b.borrowedBy), true);
-  if (item === "Return Books") return showReturnBooks();
-  if (item === "My Borrowed Books") return showMyBorrowedBooks();
-  if (item === "Late Fees & Pay") return showLateFees(true);
+  function addMenu(label, action) {
+    const li = document.createElement("li");
+    li.className = "nav-item sidebar-item px-3 py-2";
+    li.textContent = label;
+    li.addEventListener("click", () => {
+      dashboardContent.innerHTML = "";
+      action();
+    });
+    menuItems.appendChild(li);
+  }
 
-  title.textContent = item;
-}
+  function showBooks(bookList) {
+    dashboardContent.innerHTML = "";
 
-function renderBooks(list, canBorrow = false) {
-  const content = document.getElementById("dashboard-content");
-  content.innerHTML = "";
-  document.getElementById("dashboard-title").textContent = "Books";
+    bookList.forEach((book, index) => {
+      const col = document.createElement("div");
+      col.className = "col";
 
-  list.forEach((book, i) => {
-    const card = document.createElement("div");
-    card.className = "book-card";
+      const card = document.createElement("div");
+      card.className = "card book-card shadow-sm";
 
-    const image = document.createElement("img");
-    image.src = book.cover || "https://via.placeholder.com/150x220";
-    card.appendChild(image);
+      const img = document.createElement("img");
+      img.className = "card-img-top book-cover";
+      img.src = book.imageUrl || "https://via.placeholder.com/150x200";
+      img.alt = book.title;
 
-    card.innerHTML += `
-      <h3>${book.title}</h3>
-      <p>Author: ${book.author}</p>
-      <p>Genre: ${book.genre || "N/A"}</p>
-      <p>Rating: ${book.rating || "Unrated"}</p>
-      <p>${book.MostRead ? "🔥 MostRead" : ""}</p>
+      const cardBody = document.createElement("div");
+      cardBody.className = "card-body";
+
+      const title = document.createElement("h5");
+      title.className = "card-title";
+      title.textContent = book.title;
+
+      cardBody.appendChild(title);
+
+      if (book.dueDate) {
+        const due = document.createElement("p");
+        due.textContent = `Due: ${book.dueDate}`;
+        cardBody.appendChild(due);
+      }
+
+      if (currentRole === "librarian") {
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn btn-sm btn-outline-primary me-2";
+        editBtn.textContent = "Edit";
+        editBtn.onclick = () => editBook(index);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn-sm btn-outline-danger";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = () => {
+          if (confirm(`Delete "${book.title}"?`)) {
+            books.splice(index, 1);
+            showBooks(books);
+          }
+        };
+
+        cardBody.appendChild(editBtn);
+        cardBody.appendChild(deleteBtn);
+      }
+
+      card.appendChild(img);
+      card.appendChild(cardBody);
+      col.appendChild(card);
+      dashboardContent.appendChild(col);
+    });
+  }
+
+  function editBook(index) {
+    const book = books[index];
+    dashboardContent.innerHTML = `
+      <h5>Edit Book</h5>
+      <form id="edit-form">
+        <div class="mb-3">
+          <input class="form-control" id="edit-title" value="${book.title}" />
+        </div>
+        <div class="mb-3">
+          <input class="form-control" id="edit-img" value="${book.imageUrl}" />
+        </div>
+        <div class="mb-3">
+          <input class="form-control" id="edit-date" type="date" value="${book.dueDate || ""}" />
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="edit-available" ${book.available ? "checked" : ""
+      } />
+          <label class="form-check-label" for="edit-available">Available</label>
+        </div>
+        <button class="btn btn-success" type="submit">Update</button>
+      </form>
     `;
 
-    if (canBorrow) {
-      const btn = document.createElement("button");
-      btn.className = "borrow-btn";
-      btn.textContent = "Borrow";
-      btn.onclick = () => borrowBook(i);
-      card.appendChild(btn);
-    }
-
-    if (currentUser.role === "librarian") {
-      const edit = document.createElement("button");
-      edit.className = "edit-btn";
-      edit.textContent = "Edit";
-      edit.onclick = () => editBook(i);
-      card.appendChild(edit);
-
-      const del = document.createElement("button");
-      del.className = "delete-btn";
-      del.textContent = "Delete";
-      del.onclick = () => removeBook(i);
-      card.appendChild(del);
-    }
-
-    if (currentUser.role === "member") {
-      const rate = document.createElement("button");
-      rate.className = "rate-btn";
-      rate.textContent = "Rate";
-      rate.onclick = () => rateBook(i);
-      card.appendChild(rate);
-    }
-
-    content.appendChild(card);
-  });
-}
-
-function showAddBookForm() {
-  const content = document.getElementById("dashboard-content");
-  content.innerHTML = `
-    <h3>Add New Book</h3>
-    <form id="add-form">
-      <input placeholder="Title" required />
-      <input placeholder="Author" required />
-      <input placeholder="Genre" />
-      <input placeholder="Cover Image URL" />
-      <label><input type="checkbox" id="MostRead-check" /> MostRead</label>
-      <button type="submit">Add Book</button>
-      <button type="button" onclick="handleCancel()">Cancel</button>
-    </form>
-  `;
-
-  const form = document.getElementById("add-form");
-  form.onsubmit = (e) => {
-    e.preventDefault();
-    const [title, author, genre, cover] = form.querySelectorAll("input");
-    if (!title.value || !author.value) return alert("Title & Author required");
-    books.push({
-      title: title.value,
-      author: author.value,
-      genre: genre.value,
-      cover: cover.value,
-      MostRead: document.getElementById("MostRead-check").checked,
+    document.getElementById("edit-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      book.title = document.getElementById("edit-title").value;
+      book.imageUrl = document.getElementById("edit-img").value;
+      book.dueDate = document.getElementById("edit-date").value || null;
+      book.available = document.getElementById("edit-available").checked;
+      alert("Book updated.");
+      showBooks(books);
     });
-    saveBooks();
-    renderBooks(books);
-  };
-}
-
-function editBook(i) {
-  const book = books[i];
-  const content = document.getElementById("dashboard-content");
-  content.innerHTML = `
-    <h3>Edit Book</h3>
-    <form id="edit-form">
-      <input placeholder="Title" value="${book.title}" />
-      <input placeholder="Author" value="${book.author}" />
-      <input placeholder="Genre" value="${book.genre}" />
-      <input placeholder="Cover URL" value="${book.cover}" />
-       <label><input type="checkbox" id="mostReadCheckbox"> Mark as Most Read</label>
-      <button type="submit">Save</button>
-      <button type="button" onclick="handleCancel()">Cancel</button>
-    </form>
-  `;
-  document.getElementById("edit-form").onsubmit = (e) => {
-    e.preventDefault();
-    const inputs = document.querySelectorAll("#edit-form input");
-    books[i] = {
-      title: inputs[0].value,
-      author: inputs[1].value,
-      genre: inputs[2].value,
-      cover: inputs[3].value,
-      MostRead: inputs[4].checked,
-    };
-    saveBooks();
-    renderBooks(books);
-  };
-}
-
-function removeBook(i) {
-  if (confirm("Are you sure to delete this book?")) {
-    books.splice(i, 1);
-    saveBooks();
-    renderBooks(books);
   }
-}
 
-function borrowBook(i) {
-  const book = books[i];
-  if (!book || book.borrowedBy) return;
-  const due = new Date();
-  due.setDate(due.getDate() + 14);
-  books[i].borrowedBy = currentUser.username;
-  books[i].due = due.toISOString();
-  saveBooks();
-  renderBooks(books.filter((b) => !b.borrowedBy), true);
-}
+  function addBookUI() {
+    const form = document.createElement("form");
+    form.innerHTML = `
+      <h5>Add a New Book</h5>
+      <div class="mb-3">
+        <input class="form-control" id="new-book-title" placeholder="Book Title" required />
+      </div>
+      <div class="mb-3">
+        <input class="form-control" id="new-book-img" placeholder="Image URL (optional)" />
+      </div>
+      <button type="submit" class="btn btn-success">Add Book</button>
+    `;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const title = document.getElementById("new-book-title").value.trim();
+      const imageUrl = document.getElementById("new-book-img").value.trim();
+      if (title) {
+        books.push({ title, imageUrl, available: true, dueDate: null });
+        alert(`Book "${title}" added.`);
+        showBooks(books);
+      }
+    });
+    dashboardContent.appendChild(form);
+  }
 
-function showReturnBooks() {
-  const borrowed = books.filter((b) => b.borrowedBy === currentUser.username);
-  renderBooks(borrowed);
-  const cards = document.querySelectorAll(".book-card");
-  cards.forEach((card, idx) => {
-    const btn = document.createElement("button");
-    btn.textContent = "Return";
-    btn.className = "return-btn";
-    btn.onclick = () => {
-      books = books.map((b, i) =>
-        b.borrowedBy === currentUser.username && idx === i
-          ? { ...b, borrowedBy: null, due: null }
-          : b
+  function searchBookUI() {
+    const input = document.createElement("input");
+    input.className = "form-control mb-3";
+    input.placeholder = "Enter book title to search...";
+    input.addEventListener("input", () => {
+      const searchTerm = input.value.toLowerCase();
+      const results = books.filter((b) =>
+        b.title.toLowerCase().includes(searchTerm)
       );
-      saveBooks();
-      showReturnBooks();
-    };
-    card.appendChild(btn);
-  });
-}
+      showBooks(results);
+    });
+    dashboardContent.appendChild(input);
+  }
 
-function rateBook(i) {
-  const rating = prompt("Rate this book (1-5):");
-  if (!rating || isNaN(rating)) return;
-  books[i].rating = `${rating}/5`;
-  saveBooks();
-  renderBooks(books);
-}
+  function showDueDates() {
+    const list = books
+      .filter((b) => b.dueDate)
+      .map((b) => `<li>${b.title} - Due: ${b.dueDate}</li>`)
+      .join("");
+    dashboardContent.innerHTML = `<ul>${list || "No due books."}</ul>`;
+  }
 
-function showMyBorrowedBooks() {
-  const myBooks = books.filter((b) => b.borrowedBy === currentUser.username);
-  renderBooks(myBooks);
-}
+  function showLateFees() {
+    const today = new Date().toISOString().split("T")[0];
+    const lateBooks = books.filter((b) => b.dueDate && b.dueDate < today);
+    if (lateBooks.length === 0) {
+      dashboardContent.innerHTML = "<p>No late books.</p>";
+      return;
+    }
+    const list = lateBooks
+      .map((b) => `<li>${b.title} - Late Fee: Rs. 100</li>`)
+      .join("");
+    dashboardContent.innerHTML = `<ul>${list}</ul>`;
+  }
 
-function showLateFees(pay = false) {
-  const today = new Date();
-  const borrowed = books.filter((b) => b.borrowedBy === currentUser.username);
-  const content = document.getElementById("dashboard-content");
-  content.innerHTML = "<h3>Late Fees</h3>";
-
-  borrowed.forEach((b) => {
-    const due = new Date(b.due);
-    const daysLate = Math.floor((today - due) / (1000 * 60 * 60 * 24));
-    const fee = daysLate > 0 ? daysLate * 2 : 0;
-
-    const div = document.createElement("div");
-    div.textContent = `${b.title} – Late: ${daysLate > 0 ? daysLate : 0} days – Fee: ₹${fee}`;
-    if (fee > 0 && pay) {
+  function borrowBookUI() {
+    const available = books.filter((b) => b.available);
+    if (available.length === 0) {
+      dashboardContent.innerHTML = "<p>No books available to borrow.</p>";
+      return;
+    }
+    available.forEach((book, index) => {
       const btn = document.createElement("button");
-      btn.textContent = "Pay ₹" + fee;
-      btn.onclick = () => alert("Paid!");
-      div.appendChild(btn);
+      btn.className = "btn btn-outline-primary m-2";
+      btn.textContent = `Borrow "${book.title}"`;
+      btn.onclick = () => {
+        book.available = false;
+        book.dueDate = getFutureDate(7); // due in 7 days
+        alert(`You borrowed "${book.title}"`);
+        showBooks(books);
+      };
+      dashboardContent.appendChild(btn);
+    });
+  }
+
+  function returnBookUI() {
+    const borrowed = books.filter((b) => !b.available);
+    if (borrowed.length === 0) {
+      dashboardContent.innerHTML = "<p>No borrowed books to return.</p>";
+      return;
     }
-    content.appendChild(div);
-  });
-}
+    borrowed.forEach((book) => {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-outline-success m-2";
+      btn.textContent = `Return "${book.title}"`;
+      btn.onclick = () => {
+        book.available = true;
+        book.dueDate = null;
+        alert(`Returned "${book.title}"`);
+        showBooks(books);
+      };
+      dashboardContent.appendChild(btn);
+    });
+  }
 
-function showDueDates() {
-  const content = document.getElementById("dashboard-content");
-  content.innerHTML = "<h3>Due Books</h3>";
-
-  books.forEach((b) => {
-    if (b.borrowedBy) {
-      const div = document.createElement("div");
-      div.textContent = `${b.title} borrowed by ${b.borrowedBy} – Due: ${new Date(
-        b.due
-      ).toLocaleDateString()}`;
-      content.appendChild(div);
+  function showBorrowedBooks() {
+    const borrowed = books.filter((b) => !b.available);
+    if (borrowed.length === 0) {
+      dashboardContent.innerHTML = "<p>You have no borrowed books.</p>";
+    } else {
+      showBooks(borrowed);
     }
-  });
-}
+  }
 
-function handleCancel() {
-  renderBooks(books);
-}
+  function logout() {
+    if (confirm("Are you sure you want to logout?")) {
+      location.reload();
+    }
+  }
 
-function logout() {
-  currentUser = null;
-  document.getElementById("dashboard-section").classList.add("hidden");
-  document.getElementById("auth-section").classList.remove("hidden");
-}
-document.getElementById("sidebar").style.display = "none";
-
-document.getElementById("auth-form").onsubmit = function (e) {
-  e.preventDefault();
-  const username = document.getElementById("auth-username").value;
-  const password = document.getElementById("auth-password").value;
-  const role = document.getElementById("auth-role").value;
-  const user = users.find((u) => u.username === username && u.password === password && u.role === role);
-  if (!user) return alert("Invalid credentials");
-  currentUser = user;
-  document.getElementById("auth-section").classList.add("hidden");
-  document.getElementById("dashboard-section").classList.remove("hidden");
-  document.getElementById("sidebar").style.display = "block";
-
-  renderSidebar();
-  handleMenuClick("View All Books");
-};
-
-document.getElementById("register-btn").onclick = () => {
-  const username = document.getElementById("auth-username").value;
-  const password = document.getElementById("auth-password").value;
-  const role = document.getElementById("auth-role").value;
-  if (users.find((u) => u.username === username))
-    return alert("Username already exists");
-  users.push({ username, password, role });
-  saveUsers();
-  alert("Registered! You can now log in.");
-};
-
-document.getElementById("search-input").oninput = function () {
-  const term = this.value.toLowerCase();
-  const results = books.filter(
-    (b) => b.title.toLowerCase().includes(term) && !b.borrowedBy
-  );
-  renderBooks(results, true);
-};
-
-document.getElementById("librarian-search").oninput = function () {
-  const term = this.value.toLowerCase();
-  const results = books.filter((b) => b.title.toLowerCase().includes(term));
-  renderBooks(results);
-};
+  function getFutureDate(days) {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split("T")[0];
+  }
+});
